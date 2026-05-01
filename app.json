@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Paisa",
+    "slug": "paisa",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0e0e0e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.paisa.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0e0e0e"
+      },
+      "package": "com.paisa.app"
+    },
+    "web": {},
+    "extra": {
+      "eas": {
+        "projectId": "38242521-14fa-43bc-a426-e674faa44465"
+      }
+    }
+  }
+}
