@@ -21,7 +21,8 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { StateProvider, useAppState } from './src/lib/state';
 import { ToastProvider } from './src/components/Toast';
-import { colors, fonts } from './src/theme/tokens';
+import { fonts } from './src/theme/tokens';
+import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
 import HomeScreen from './src/screens/HomeScreen';
 import EnvelopesScreen from './src/screens/EnvelopesScreen';
@@ -35,24 +36,9 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 const Tab = createBottomTabNavigator();
 
-/**
- * React Navigation theme — overrides the defaults to match our dark palette.
- * Without this, screen backgrounds flash white during navigation.
- */
-const navTheme = {
-  ...DefaultTheme,
-  dark: true,
-  colors: {
-    ...DefaultTheme.colors,
-    background: colors.bg,
-    card: colors.bg,
-    text: colors.text,
-    border: colors.line,
-    primary: colors.accent,
-  },
-};
-
 function Tabs() {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -60,7 +46,7 @@ function Tabs() {
         tabBarActiveTintColor: colors.text,
         tabBarInactiveTintColor: colors.textFaint,
         tabBarStyle: {
-          backgroundColor: 'rgba(14, 14, 14, 0.95)',
+          backgroundColor: colors.bg,
           borderTopColor: colors.line,
           borderTopWidth: 1,
           height: 68,
@@ -97,14 +83,28 @@ function Tabs() {
  */
 function AppShell() {
   const { state, ready } = useAppState();
+  const { colors, isDark } = useTheme();
   const [onboarded, setOnboarded] = useState(null);
 
-  // Decide once on first render whether to show onboarding
+  const navTheme = {
+    ...DefaultTheme,
+    dark: isDark,
+    colors: {
+      ...DefaultTheme.colors,
+      background: colors.bg,
+      card: colors.bg,
+      text: colors.text,
+      border: colors.line,
+      primary: colors.accent,
+    },
+  };
+
+  // Recompute onboarding whenever the persisted budget actually changes.
   useEffect(() => {
     if (!ready) return;
     const hasData = state.envelopes.length > 0 || state.settings.monthlyIncome > 0;
     setOnboarded(hasData);
-  }, [ready]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready, state.envelopes.length, state.settings.monthlyIncome]);
 
   if (!ready || onboarded === null) {
     return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
@@ -149,12 +149,14 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StateProvider>
-        <ToastProvider>
-          <View style={styles.root} onLayout={onLayoutRootView}>
-            <StatusBar style="light" />
-            <AppShell />
-          </View>
-        </ToastProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <View style={styles.root} onLayout={onLayoutRootView}>
+              <StatusBar style="auto" />
+              <AppShell />
+            </View>
+          </ToastProvider>
+        </ThemeProvider>
       </StateProvider>
     </SafeAreaProvider>
   );
@@ -163,6 +165,5 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
   },
 });

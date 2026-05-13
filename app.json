@@ -5,12 +5,15 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "icon": "./ios/Paisa/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.paisa.app"
     },
     "android": {
+      "icon": "./ios/Paisa/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png",
       "adaptiveIcon": {
+        "foregroundImage": "./ios/Paisa/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png",
         "backgroundColor": "#0e0e0e"
       },
       "package": "com.paisa.app"

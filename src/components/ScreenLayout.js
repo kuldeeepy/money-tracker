@@ -7,7 +7,7 @@
  *   - Scrollable body that respects the bottom nav
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,11 +17,14 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts, spacing } from '../theme/tokens';
+import { fonts, spacing } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import SettingsSheet from './SettingsSheet';
 
 export default function ScreenLayout({ children, scrollable = true }) {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -62,40 +65,42 @@ export default function ScreenLayout({ children, scrollable = true }) {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.bg,
-  },
-  topbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: 18,
-    paddingBottom: 12,
-  },
-  brand: {
-    fontFamily: fonts.display,
-    fontWeight: '600',
-    fontSize: 22,
-    color: colors.text,
-    letterSpacing: -0.2,
-  },
-  brandDot: {
-    color: colors.good,
-  },
-  iconBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    flex: 1,
-  },
-  bodyContent: {
-    paddingHorizontal: spacing.xl,
-  },
-});
+function makeStyles(colors) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: colors.bg,
+    },
+    topbar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.xl,
+      paddingTop: 18,
+      paddingBottom: 12,
+    },
+    brand: {
+      fontFamily: fonts.display,
+      fontWeight: '600',
+      fontSize: 22,
+      color: colors.text,
+      letterSpacing: -0.2,
+    },
+    brandDot: {
+      color: colors.good,
+    },
+    iconBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      flex: 1,
+    },
+    bodyContent: {
+      paddingHorizontal: spacing.xl,
+    },
+  });
+}

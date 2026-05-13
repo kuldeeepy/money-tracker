@@ -6,11 +6,11 @@
  * If the user has no envelopes yet, it opens the envelope sheet first.
  */
 
-import React, { useState } from 'react';
-import { TouchableOpacity, StyleSheet, View } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import { useAppState } from '../lib/state';
 import { useToast } from './Toast';
 import TransactionSheet from './TransactionSheet';
@@ -20,6 +20,8 @@ export default function FAB() {
   const { state } = useAppState();
   const toast = useToast();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [txnOpen, setTxnOpen] = useState(false);
   const [envOpen, setEnvOpen] = useState(false);
 
@@ -61,20 +63,22 @@ export default function FAB() {
   );
 }
 
-const styles = StyleSheet.create({
-  fab: {
-    position: 'absolute',
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: colors.accent,
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 12,
-  },
-});
+function makeStyles(colors) {
+  return StyleSheet.create({
+    fab: {
+      position: 'absolute',
+      right: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: colors.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: colors.accent,
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 12,
+    },
+  });
+}
