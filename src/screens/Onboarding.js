@@ -7,7 +7,7 @@
  *      sized as percentages of stated income.
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,8 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts, radius } from '../theme/tokens';
+import { fonts, radius } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import { Button } from '../components/Form';
 import { useAppState } from '../lib/state';
 import { uid } from '../lib/format';
@@ -35,13 +36,17 @@ const SEEDS = [
 
 export default function Onboarding({ onDone }) {
   const { setSettings, upsertEnvelope } = useAppState();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const [step, setStep] = useState('welcome');
   const [income, setIncome] = useState('');
+  const [periodStart, setPeriodStart] = useState('1');
   const insets = useSafeAreaInsets();
 
   const handleFinish = async () => {
     const num = parseFloat(income) || 0;
-    await setSettings({ monthlyIncome: num, currency: '₹' });
+    const startDay = Math.min(28, Math.max(1, parseInt(periodStart, 10) || 1));
+    await setSettings({ monthlyIncome: num, currency: '₹', periodStart: startDay });
 
     if (num > 0) {
       // Seed default envelopes — user can edit/delete freely afterwards
@@ -101,6 +106,23 @@ export default function Onboarding({ onDone }) {
               selectionColor={colors.text}
             />
           </View>
+          <Text style={styles.fieldLabel}>When should each budget cycle reset?</Text>
+          <View style={styles.periodWrap}>
+            <Text style={styles.periodPrefix}>Day</Text>
+            <TextInput
+              value={periodStart}
+              onChangeText={setPeriodStart}
+              keyboardType="number-pad"
+              placeholder="1"
+              placeholderTextColor={colors.textFaint}
+              style={styles.periodInput}
+              selectionColor={colors.text}
+              maxLength={2}
+            />
+          </View>
+          <Text style={styles.periodHelp}>
+            Example: choose 1 for calendar months, or 26 if your salary cycle starts on the 26th.
+          </Text>
           <Button label="Create my budget" kind="primary" onPress={handleFinish} />
         </View>
       )}
@@ -108,7 +130,8 @@ export default function Onboarding({ onDone }) {
   );
 }
 
-const styles = StyleSheet.create({
+function makeStyles(colors) {
+  return StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.bg,
@@ -127,7 +150,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   markAccent: {
-    color: colors.good,
+    color: colors.accent,
   },
   h1: {
     fontFamily: fonts.display,
@@ -171,4 +194,44 @@ const styles = StyleSheet.create({
     color: colors.text,
     padding: 0,
   },
-});
+  fieldLabel: {
+    fontFamily: fonts.body,
+    color: colors.textFaint,
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  periodWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgElev2,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: radius.sm,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+  },
+  periodPrefix: {
+    fontFamily: fonts.body,
+    color: colors.textDim,
+    fontSize: 16,
+    marginRight: 10,
+  },
+  periodInput: {
+    flex: 1,
+    fontFamily: fonts.display,
+    fontSize: 24,
+    color: colors.text,
+    padding: 0,
+  },
+  periodHelp: {
+    fontFamily: fonts.body,
+    color: colors.textDim,
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 10,
+    marginBottom: 24,
+  },
+  });
+}

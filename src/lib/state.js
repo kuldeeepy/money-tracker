@@ -9,12 +9,15 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { dbGet, dbSet, dbWipe } from './storage';
+import { pendingFixedLogs } from './budget';
+import { uid } from './format';
 
 const DEFAULT_STATE = {
   settings: {
     currency: '₹',
     monthlyIncome: 0,
     periodStart: 1,
+    themePreference: 'system',
   },
   envelopes: [],     // { id, name, icon, color, type, budget, goalAmount? }
   transactions: [],  // { id, type, amount, envelopeId, payee, note, date }
@@ -28,6 +31,7 @@ const StateContext = createContext({
   removeEnvelope: async () => {},
   upsertTransaction: async () => {},
   removeTransaction: async () => {},
+  autoLogFixed: async () => {},
   importAll: async () => {},
   resetAll: async () => {},
 });
@@ -55,9 +59,8 @@ export function StateProvider({ children }) {
   const persist = useCallback(async (slice) => {
     setState((prev) => {
       const partial = typeof slice === 'function' ? slice(prev) : slice;
+      if (!partial || Object.keys(partial).length === 0) return prev;
       const next = { ...prev, ...partial };
-      // Fire-and-forget DB writes for the slices that changed.
-      // Order doesn't matter — they're independent keys.
       if (partial.settings)     dbSet('settings',     next.settings);
       if (partial.envelopes)    dbSet('envelopes',    next.envelopes);
       if (partial.transactions) dbSet('transactions', next.transactions);
@@ -105,6 +108,14 @@ export function StateProvider({ children }) {
     }));
   }, [persist]);
 
+  const autoLogFixed = useCallback(async () => {
+    await persist((prev) => {
+      const pending = pendingFixedLogs(prev);
+      if (pending.length === 0) return {};
+      return { transactions: [...prev.transactions, ...pending.map((t) => ({ ...t, id: uid() }))] };
+    });
+  }, [persist]);
+
   /** Replace all data from a backup file. */
   const importAll = useCallback(async (data) => {
     const next = {
@@ -134,6 +145,7 @@ export function StateProvider({ children }) {
         removeEnvelope,
         upsertTransaction,
         removeTransaction,
+        autoLogFixed,
         importAll,
         resetAll,
       }}

@@ -9,10 +9,11 @@
  * The provider wraps the app at the root; useToast() returns the controller.
  */
 
-import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts, spacing } from '../theme/tokens';
+import { fonts, spacing } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 
 const ToastContext = createContext({ show: () => {} });
 
@@ -22,6 +23,8 @@ export function ToastProvider({ children }) {
   const translateY = useRef(new Animated.Value(20)).current;
   const timerRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
 
   const show = useCallback((message) => {
     setMsg(message);
@@ -68,24 +71,26 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
-const styles = StyleSheet.create({
-  toast: {
-    position: 'absolute',
-    alignSelf: 'center',
-    backgroundColor: colors.text,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 999,
-    shadowColor: '#000',
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-  text: {
-    fontFamily: fonts.bodyMedium,
-    fontSize: 13,
-    color: colors.bg,
-    fontWeight: '500',
-  },
-});
+function makeStyles(colors) {
+  return StyleSheet.create({
+    toast: {
+      position: 'absolute',
+      alignSelf: 'center',
+      backgroundColor: colors.text,
+      paddingHorizontal: 18,
+      paddingVertical: 12,
+      borderRadius: 999,
+      shadowColor: '#000',
+      shadowOpacity: 0.4,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 8,
+    },
+    text: {
+      fontFamily: fonts.bodyMedium,
+      fontSize: 13,
+      color: colors.bg,
+      fontWeight: '500',
+    },
+  });
+}

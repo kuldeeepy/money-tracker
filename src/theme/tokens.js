@@ -1,28 +1,50 @@
 /**
  * Design tokens for Paisa.
- * Mirrors the CSS variables from the PWA version exactly.
- * Dark-first palette with warm cream accent (nods to paper envelope origin).
+ * Supports dark and light palettes.
  */
 
-export const colors = {
-  bg:        '#0e0e0e',
-  bgElev:    '#161616',
-  bgElev2:   '#1f1f1f',
-  line:      '#2a2a2a',
-  lineSoft:  '#1f1f1f',
-
-  text:      '#f5f1e8',  // warm cream — main text
-  textDim:   '#a39d92',
-  textFaint: '#6b675f',
-
-  accent:    '#f5f1e8',
-  accentInk: '#0e0e0e',
-
-  good:      '#a8d18d',  // under-budget / income
-  warn:      '#e8c468',  // approaching budget
-  bad:       '#e87b5e',  // over budget / expense
-  info:      '#8db4d1',
+export const darkColors = {
+  bg:         '#0e0e0e',
+  bgElev:     '#161616',
+  bgElev2:    '#1f1f1f',
+  line:       '#2a2a2a',
+  lineSoft:   '#242424',
+  text:       '#f5f1e8',
+  textDim:    '#a39d92',
+  textFaint:  '#6b675f',
+  accent:     '#e8b84b',
+  accentInk:  '#1a1400',
+  good:       '#a8d18d',
+  warn:       '#e8c468',
+  bad:        '#e87b5e',
+  info:       '#8db4d1',
+  goodSubtle: 'rgba(168,209,141,0.15)',
+  warnSubtle: 'rgba(232,196,104,0.15)',
+  badSubtle:  'rgba(232,123,94,0.15)',
 };
+
+export const lightColors = {
+  bg:         '#faf9f6',
+  bgElev:     '#f2f0eb',
+  bgElev2:    '#e8e5de',
+  line:       '#d4d0c8',
+  lineSoft:   '#dedad2',
+  text:       '#1a1814',
+  textDim:    '#5c584f',
+  textFaint:  '#9c9890',
+  accent:     '#c4951a',
+  accentInk:  '#ffffff',
+  good:       '#3a7d28',
+  warn:       '#b8880a',
+  bad:        '#c94a2a',
+  info:       '#2a6d9e',
+  goodSubtle: 'rgba(58,125,40,0.12)',
+  warnSubtle: 'rgba(184,136,10,0.12)',
+  badSubtle:  'rgba(201,74,42,0.12)',
+};
+
+// Backward-compat: any file that still imports `colors` gets the dark palette
+export const colors = darkColors;
 
 export const radius = {
   sm: 12,

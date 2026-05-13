@@ -6,7 +6,7 @@
  * lets users swipe down to dismiss.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   Modal,
   View,
@@ -22,12 +22,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors, fonts, radius, spacing } from '../theme/tokens';
+import { fonts, radius, spacing } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 
 const { height: SCREEN_H } = Dimensions.get('window');
 
 export default function Sheet({ visible, title, onClose, children }) {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const slide = useRef(new Animated.Value(SCREEN_H)).current;
   const fade = useRef(new Animated.Value(0)).current;
 
@@ -111,55 +114,57 @@ export default function Sheet({ visible, title, onClose, children }) {
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  kbWrap: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: colors.bgElev,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
-    borderTopWidth: 1,
-    borderColor: colors.line,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: colors.line,
-    alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
-  },
-  title: {
-    fontFamily: fonts.display,
-    fontSize: 20,
-    fontWeight: '500',
-    color: colors.text,
-  },
-  closeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.bgElev2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  body: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
-  },
-});
+function makeStyles(colors) {
+  return StyleSheet.create({
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+    kbWrap: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: colors.bgElev,
+      borderTopLeftRadius: radius.lg,
+      borderTopRightRadius: radius.lg,
+      borderTopWidth: 1,
+      borderColor: colors.line,
+    },
+    handle: {
+      width: 36,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.line,
+      alignSelf: 'center',
+      marginTop: 10,
+      marginBottom: 4,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.sm,
+    },
+    title: {
+      fontFamily: fonts.display,
+      fontSize: 20,
+      fontWeight: '500',
+      color: colors.text,
+    },
+    closeBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.bgElev2,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    body: {
+      paddingHorizontal: spacing.xl,
+      paddingTop: spacing.sm,
+    },
+  });
+}

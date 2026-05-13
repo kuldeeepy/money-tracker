@@ -7,11 +7,12 @@
  *   onClose    () => void
  */
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Alert, ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
 import Sheet from './Sheet';
 import { Field, TextField, AmountInput, Segmented, Button } from './Form';
-import { colors, fonts, radius } from '../theme/tokens';
+import { fonts, radius } from '../theme/tokens';
+import { useTheme } from '../theme/ThemeContext';
 import { useAppState } from '../lib/state';
 import { useToast } from './Toast';
 import { uid, today } from '../lib/format';
@@ -19,6 +20,8 @@ import { uid, today } from '../lib/format';
 export default function TransactionSheet({ visible, txn, onClose }) {
   const { state, upsertTransaction, removeTransaction } = useAppState();
   const toast = useToast();
+  const { colors } = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const isEdit = !!(txn && txn.id);
 
   // Local form state — initialized from `txn` whenever the sheet opens
@@ -28,6 +31,7 @@ export default function TransactionSheet({ visible, txn, onClose }) {
   const [payee, setPayee] = useState('');
   const [date, setDate] = useState(today());
   const [note, setNote] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -38,6 +42,7 @@ export default function TransactionSheet({ visible, txn, onClose }) {
       setPayee(txn?.payee || '');
       setDate(txn?.date || today());
       setNote(txn?.note || '');
+      setConfirmDelete(false);
     }
   }, [visible, txn, state.envelopes]);
 
@@ -47,7 +52,7 @@ export default function TransactionSheet({ visible, txn, onClose }) {
       toast.show('Enter an amount');
       return;
     }
-    if (!envelopeId) {
+    if (type === 'expense' && !envelopeId) {
       toast.show('Pick an envelope');
       return;
     }
@@ -56,7 +61,7 @@ export default function TransactionSheet({ visible, txn, onClose }) {
       id: txn?.id || uid(),
       type,
       amount: num,
-      envelopeId,
+      envelopeId: type === 'expense' ? envelopeId : null,
       payee: payee.trim(),
       note: note.trim(),
       date,
@@ -66,23 +71,14 @@ export default function TransactionSheet({ visible, txn, onClose }) {
     toast.show(isEdit ? 'Updated' : 'Added');
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Delete transaction?',
-      'This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await removeTransaction(txn.id);
-            onClose();
-            toast.show('Deleted');
-          },
-        },
-      ]
-    );
+  const handleDelete = async () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+    await removeTransaction(txn.id);
+    onClose();
+    toast.show('Deleted');
   };
 
   return (
@@ -109,40 +105,40 @@ export default function TransactionSheet({ visible, txn, onClose }) {
         />
       </Field>
 
-      <Field label="Envelope">
-        {/* Custom select: chips that scroll horizontally so we don't need
-            a native picker (which has poor styling control on Android). */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingRight: 8 }}
-        >
-          {state.envelopes.map((e) => {
-            const active = e.id === envelopeId;
-            return (
-              <TouchableOpacity
-                key={e.id}
-                onPress={() => setEnvelopeId(e.id)}
-                style={[
-                  styles.envChip,
-                  active && { backgroundColor: e.color, borderColor: e.color },
-                ]}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.envChipText, active && { color: colors.bg }]}>
-                  {e.icon} {e.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </Field>
+      {type === 'expense' && (
+        <Field label="Envelope">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8, paddingRight: 8 }}
+          >
+            {state.envelopes.map((e) => {
+              const active = e.id === envelopeId;
+              return (
+                <TouchableOpacity
+                  key={e.id}
+                  onPress={() => setEnvelopeId(e.id)}
+                  style={[
+                    styles.envChip,
+                    active && { backgroundColor: e.color, borderColor: e.color },
+                  ]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.envChipText, active && { color: colors.bg }]}>
+                    {e.icon} {e.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </Field>
+      )}
 
-      <Field label="Payee">
+      <Field label={type === 'income' ? 'Source' : 'Payee'}>
         <TextField
           value={payee}
           onChangeText={setPayee}
-          placeholder="Where did it go?"
+          placeholder={type === 'income' ? 'e.g. Salary, Freelance' : 'Where did it go?'}
         />
       </Field>
 
@@ -169,9 +165,17 @@ export default function TransactionSheet({ visible, txn, onClose }) {
       />
       {isEdit && (
         <Button
-          label="Delete"
+          label={confirmDelete ? 'Tap again to confirm delete' : 'Delete'}
           kind="danger"
           onPress={handleDelete}
+          style={{ marginTop: 10 }}
+        />
+      )}
+      {confirmDelete && (
+        <Button
+          label="Cancel"
+          kind="ghost"
+          onPress={() => setConfirmDelete(false)}
           style={{ marginTop: 10 }}
         />
       )}
@@ -179,18 +183,20 @@ export default function TransactionSheet({ visible, txn, onClose }) {
   );
 }
 
-const styles = StyleSheet.create({
-  envChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: colors.bgElev2,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  envChipText: {
-    fontFamily: fonts.body,
-    fontSize: 13,
-    color: colors.textDim,
-  },
-});
+function makeStyles(colors) {
+  return StyleSheet.create({
+    envChip: {
+      paddingHorizontal: 14,
+      paddingVertical: 10,
+      borderRadius: 999,
+      backgroundColor: colors.bgElev2,
+      borderWidth: 1,
+      borderColor: colors.line,
+    },
+    envChipText: {
+      fontFamily: fonts.body,
+      fontSize: 13,
+      color: colors.textDim,
+    },
+  });
+}

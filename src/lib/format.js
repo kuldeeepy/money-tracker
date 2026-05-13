@@ -3,6 +3,26 @@
  * Ported directly from the PWA's <script> block.
  */
 
+function pad2(value) {
+  return String(value).padStart(2, '0');
+}
+
+/** Convert a Date into a local YYYY-MM-DD string. */
+export function isoDate(date = new Date()) {
+  return [
+    date.getFullYear(),
+    pad2(date.getMonth() + 1),
+    pad2(date.getDate()),
+  ].join('-');
+}
+
+/** Parse YYYY-MM-DD into a local Date object. */
+export function parseIsoDate(dateStr) {
+  if (!dateStr) return new Date(NaN);
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, (month || 1) - 1, day || 1);
+}
+
 /**
  * Format an amount with the user's currency symbol.
  * Uses en-IN locale grouping for ₹ (so we get ₹1,23,456) and en-US otherwise.
@@ -40,7 +60,7 @@ export function fmtParts(amount, currency = '₹') {
  * "Today" / "Yesterday" / "Mon, Apr 28"
  */
 export function dayHeader(dateStr) {
-  const d = new Date(dateStr);
+  const d = parseIsoDate(dateStr);
   const today = new Date();
   const yest = new Date();
   yest.setDate(today.getDate() - 1);
@@ -58,7 +78,7 @@ export function dayHeader(dateStr) {
 
 /** ISO date string for "today" — used as default for new transactions. */
 export function today() {
-  return new Date().toISOString().slice(0, 10);
+  return isoDate();
 }
 
 /** Short unique ID — not crypto-grade, just unique enough for local data. */
